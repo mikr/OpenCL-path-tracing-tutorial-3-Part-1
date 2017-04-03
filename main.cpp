@@ -5,7 +5,12 @@
 #include <fstream>
 #include <vector>
 #include "gl_interop.h"
-#include <CL\cl.hpp>
+#if defined(__APPLE__)
+#include <OpenGL/OpenGL.h>
+#elif defined(__linux__)
+#include <GL/glx.h>
+#endif
+#include <CL/cl.hpp>
 
 // TODO
 // cleanup()
@@ -98,7 +103,7 @@ void printErrorLog(const Program& program, const Device& device){
 
 	// Print the error log to a file
 	FILE *log = fopen("errorlog.txt", "w");
-	fprintf(log, "%s\n", buildlog);
+	fprintf(log, "%s\n", buildlog.c_str());
 	cout << "Error log saved in 'errorlog.txt'" << endl;
 	system("PAUSE");
 	exit(1);
@@ -141,14 +146,35 @@ void initOpenCL()
 	cout << "\nUsing OpenCL device: \t" << device.getInfo<CL_DEVICE_NAME>() << endl;
 
 	// Create an OpenCL context on that device.
-	// Windows specific OpenCL-OpenGL interop
+#if defined(_WIN32)
+    // Windows
 	cl_context_properties properties[] =
 	{
 		CL_GL_CONTEXT_KHR, (cl_context_properties)wglGetCurrentContext(),
 		CL_WGL_HDC_KHR, (cl_context_properties)wglGetCurrentDC(),
-		CL_CONTEXT_PLATFORM, (cl_context_properties)platform(), 
+        CL_CONTEXT_PLATFORM, (cl_context_properties)platform(),
 		0
 	};
+#elif defined(__APPLE__)
+    // OS X
+    CGLContextObj kCGLContext = CGLGetCurrentContext();
+    CGLShareGroupObj kCGLShareGroup = CGLGetShareGroup(kCGLContext);
+    cl_context_properties properties[] =
+    {
+    	CL_CONTEXT_PROPERTY_USE_CGL_SHAREGROUP_APPLE,
+    	(cl_context_properties)kCGLShareGroup,
+    	0
+    };
+#else
+    // Linux
+    cl_context_properties properties[] =
+    {
+    	CL_GL_CONTEXT_KHR, (cl_context_properties)glXGetCurrentContext(),
+    	CL_GLX_DISPLAY_KHR, (cl_context_properties)glXGetCurrentDisplay(),
+    	CL_CONTEXT_PLATFORM, (cl_context_properties)platform(),
+    	0
+    };
+#endif
 
 	context = Context(device, properties);
 
@@ -318,7 +344,7 @@ void cleanUp(){
 //	delete cpu_output;
 }
 
-void main(int argc, char** argv){
+int main(int argc, char** argv){
 
 	// initialise OpenGL (GLEW and GLUT window + callback functions)
 	initGL(argc, argv);

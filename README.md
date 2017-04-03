@@ -17,3 +17,17 @@ To compile this code, it's recommended to download and install the AMD App SDK (
     
 - Add all the files to the project (or create a new file and paste the code) and build the code
 
+Compiling instructions (for macOS)
+
+- Install glew via homebrew with: brew install glew
+- Fetch cl.hpp with: wget -P CL https://www.khronos.org/registry/OpenCL/api/2.1/cl.hpp
+- Compile with: mkdir build ; cd build ; cmake -DCMAKE_CXX_FLAGS="-I .." .. ; make
+- Run with: build/clpathtracer
+
+Compiling instructions (for Ubuntu Linux 16.04)
+
+- Install necessary libraries: apt-get install cmake libxmu-dev libxi-dev libglew-dev freeglut3-dev
+- Install OpenCL driver for Intel for example: apt-get install ocl-icd-opencl-dev beignet-opencl-icd
+
+- Fetch cl.hpp with: wget -P CL https://www.khronos.org/registry/OpenCL/api/2.1/cl.hpp
+- Compile with: mkdir build ; cd build ; cmake -DCMAKE_CXX_FLAGS="-I .." .. ; make
